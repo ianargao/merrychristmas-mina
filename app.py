@@ -43,12 +43,10 @@ from flask import (
 
 from flask_sqlalchemy import SQLAlchemy
 
-from werkzeug.security import (
-    generate_password_hash,
-    check_password_hash
-)
+from werkzeug.security import check_password_hash
 
 import cloudinary
+import cloudinary.uploader
 
 
 # ============================================================
@@ -75,10 +73,9 @@ ALLOWED_EXTENSIONS = {
 
 app = Flask(__name__)
 
-app.config["SECRET_KEY"] = os.environ.get(
-    "SECRET_KEY",
-    "dev-change-me"
-)
+# IMPORTANT:
+# SECRET_KEY must be stored in .env
+app.config["SECRET_KEY"] = os.environ["SECRET_KEY"]
 
 app.config["SQLALCHEMY_DATABASE_URI"] = (
     "sqlite:///"
@@ -117,34 +114,36 @@ cloudinary.config(
     ) or None
 )
 
-import cloudinary.uploader
-
 
 # ============================================================
-# PASSWORDS
+# PASSWORD / LOGIN CONFIG
+# ============================================================
+#
+# IMPORTANT:
+# All credentials are now loaded from .env.
+#
+# There are NO plaintext passwords in this Python file.
+#
+# Gallery:
+#   GALLERY_PASSWORD_HASH
+#
+# Admin:
+#   ADMIN_USERNAME
+#   ADMIN_PASSWORD_HASH
+#
 # ============================================================
 
-GALLERY_PASSWORD = os.environ.get(
-    "GALLERY_PASSWORD",
-    "REMOVED_OLD_GALLERY_PASSWORD"
-)
+GALLERY_PASSWORD_HASH = os.environ[
+    "GALLERY_PASSWORD_HASH"
+]
 
-ADMIN_USERNAME = os.environ.get(
-    "ADMIN_USERNAME",
-    "REMOVED_OLD_ADMIN_USERNAME"
-)
+ADMIN_USERNAME = os.environ[
+    "ADMIN_USERNAME"
+]
 
-ADMIN_PASSWORD_PLAIN = os.environ.get(
-    "ADMIN_PASSWORD",
-    "REMOVED_OLD_ADMIN_PASSWORD"
-)
-
-ADMIN_PASSWORD_HASH = os.environ.get(
-    "ADMIN_PASSWORD_HASH",
-    generate_password_hash(
-        ADMIN_PASSWORD_PLAIN
-    )
-)
+ADMIN_PASSWORD_HASH = os.environ[
+    "ADMIN_PASSWORD_HASH"
+]
 
 
 # ============================================================
@@ -704,7 +703,12 @@ def gallery_login():
             ""
         )
 
-        if entered == GALLERY_PASSWORD:
+        # Password is checked against the HASH
+        # stored in the environment variable.
+        if check_password_hash(
+            GALLERY_PASSWORD_HASH,
+            entered
+        ):
 
             visit = VisitorSession(
                 ip_address=request.headers.get(
@@ -1256,6 +1260,10 @@ def admin_login():
             ""
         )
 
+        # Username comes from .env.
+        #
+        # Password is checked against the HASH
+        # stored in .env.
         if (
             username == ADMIN_USERNAME
             and
