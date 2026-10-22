@@ -1,5 +1,7 @@
+
 Flask==3.0.3
 Flask-SQLAlchemy==3.1.1
 Werkzeug==3.0.3
 python-dotenv
 cloudinary
+psycopg[binary]

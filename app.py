@@ -80,13 +80,22 @@ app = Flask(__name__)
 # SECRET_KEY must be stored in .env
 app.config["SECRET_KEY"] = os.environ["SECRET_KEY"]
 
-app.config["SQLALCHEMY_DATABASE_URI"] = (
-    "sqlite:///"
-    + os.path.join(
-        BASE_DIR,
-        "site.db"
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+if os.environ.get("VERCEL"):
+    if not DATABASE_URL:
+        raise RuntimeError("DATABASE_URL is required on Vercel.")
+
+    if DATABASE_URL.startswith("postgres://"):
+        DATABASE_URL = DATABASE_URL.replace(
+            "postgres://", "postgresql://", 1
+        )
+
+    app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
+else:
+    app.config["SQLALCHEMY_DATABASE_URI"] = (
+        "sqlite:///" + os.path.join(BASE_DIR, "site.db")
     )
-)
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
