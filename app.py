@@ -57,11 +57,14 @@ BASE_DIR = os.path.abspath(
     os.path.dirname(__file__)
 )
 
-UPLOAD_FOLDER = os.path.join(
-    BASE_DIR,
-    "static",
-    "uploads"
-)
+if os.environ.get("VERCEL"):
+    UPLOAD_FOLDER = "/tmp/uploads"
+else:
+    UPLOAD_FOLDER = os.path.join(
+        BASE_DIR,
+        "static",
+        "uploads"
+    )
 
 ALLOWED_EXTENSIONS = {
     "png",
